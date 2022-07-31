@@ -1,0 +1,22 @@
+
+user:
+    description: "user id"
+    type: "string"
+
+password:
+    description: "password"
+    type: "string"
+email:
+    description: "user email"
+    type: "string"
+polygon:
+    description:  "geojson polygon which will be used as a spatial filter"
+    type: "geojson"
+
+products_bucket_list:
+        description:  "list pf the previous downloaded products"
+        type: "list"
+
+last_product_date:
+        description:  "time when last product was downloaded"
+        type: "dateTime"
