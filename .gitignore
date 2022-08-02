@@ -1,2 +1,2 @@
-secrets
-sentinel_response_sample
+secrets.env
+sentinel_response_sample.py

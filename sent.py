@@ -120,10 +120,8 @@ def send_email_notification(sender_email, user, password, values):
             message.attachment = attachedFile
             # sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
             sg = SendGridAPIClient(password)
-
             response = sg.send(message)
             print(response.status_code)
-            print(response.body)
             print(response.headers)
             Controller.update_history(user, values)
             os.remove('temp_result.html')
@@ -143,14 +141,7 @@ def listen_for_Update():
 
 
 def look_for(identifier, user):
-
-    # TODO: look for the product inside the mongoDB
-    Controller = controller.Controller()
-    # user should be an object that contains {email, password,.....etc}
-    Controller.login(user)
-
-    user_object = Controller.get_user_by_email(user['email'])
-    products_list = user_object['products_bucket_list'] if hasattr(user_object, 'products_bucket_list') else []
+    products_list = user['products_bucket_list'] if 'products_bucket_list' in user.keys() else []
     if identifier not in products_list:
         return True
 
@@ -161,19 +152,24 @@ def listener():
         print("k")
 
 
+Controller = controller.Controller()
+Controller.login(db_object)
+user_object = Controller.get_user_by_email(db_object['email'])
+SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
 footprint = geojson_to_wkt(db_object['polygon'])
 api = establish_connection('baloola', 'rastaman')
 products = api.query(footprint,
                      date=(db_object['last_product_date'], "NOW"),
                      platformname='Sentinel-2',
                      cloudcoverpercentage=(0, 30))
+
 values = []
 
 for key, value in products.items():
-    if not look_for(value['identifier'], db_object):
+    if look_for(value['identifier'], user_object):
         values.append(value['identifier'])
 if len(values) > 0:
-    send_email_notification('baloola-mu@hotmail.com', db_object, '<sendgrid_key>', products.items())
+    send_email_notification('baloola-mu@hotmail.com', user_object, SENDGRID_API_KEY, products.items())
 else:
     print("all up to date!")
 # baloola.strangled.net

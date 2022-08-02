@@ -75,22 +75,19 @@ class Controller:
 
         self.collection.update_one({'email': email}, new_values)
 
-    def update_history(self, user, items):
-        items_list = []
-        for key, item in items:
-            items_list.append(item['identifier'])
-        user_object = self.get_user_by_email(user['email'])
+    def update_history(self, user_object, items):
 
-        last_product_date = user_object['last_product_date'] if hasattr(user_object, 'last_product_date') else None
-        products_bucket_list = user_object['products_bucket_list']if hasattr(user_object, 'products_bucket_list') else []
+        products_bucket_list = user_object['products_bucket_list']if 'products_bucket_list' in user_object.keys() else []
+
         if (products_bucket_list is not None
             and isinstance(products_bucket_list, list)
-            and len(products_bucket_list) > 0
-            and last_product_date not in products_bucket_list):
+            and len(products_bucket_list) > 0):
+            for key, item in items:
+                if item['identifier'] not in products_bucket_list:
+                    products_bucket_list.append(item['identifier'])
 
-            products_bucket_list + items_list
-        else:
-            products_bucket_list = items_list
+        last_product_date = user_object['last_product_date'] if 'last_product_date' in user_object.keys() else None
+
         new_values = {
             "$set": {
                 'products_bucket_list': products_bucket_list,
@@ -98,5 +95,5 @@ class Controller:
             }
         }
 
-        self.collection.update_one({'email': user['email']}, new_values)
+        self.collection.update_one({'email': user_object['email']}, new_values)
 
